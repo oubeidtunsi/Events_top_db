@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Events-TOP — Core DB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════
+   DARK THEME
+══════════════════════════════════════════ */
+:root,
+[data-theme="dark"] {
+  --bg:         #0a0b0f;
+  --surface:    #12141a;
+  --card:       #181b24;
+  --card-hover: #1d2030;
+  --border:     #252835;
+  --border-focus: #e8ff47;
+
+  --accent:     #e8ff47;
+  --accent-dim: rgba(232,255,71,.12);
+  --accent-txt: #000;
+
+  --danger:     #ff5c5c;
+  --success:    #2ed573;
+  --warning:    #ffaa2c;
+
+  --text:       #e2e5f0;
+  --text-soft:  #b0b6c8;
+  --muted:      #6b7280;
+
+  --shadow-sm:  0 2px 8px rgba(0,0,0,.4);
+  --shadow-md:  0 6px 24px rgba(0,0,0,.5);
+
+  --toggle-icon: "☀️";
+}
+
+/* ══════════════════════════════════════════
+   LIGHT THEME
+══════════════════════════════════════════ */
+[data-theme="light"] {
+  --bg:         #f2f1ec;
+  --surface:    #e9e8e2;
+  --card:       #ffffff;
+  --card-hover: #fafaf8;
+  --border:     #d8d6ce;
+  --border-focus: #2a2d1e;
+
+  --accent:     #2a2d1e;
+  --accent-dim: rgba(42,45,30,.08);
+  --accent-txt: #e8ff47;
+
+  --danger:     #cc2c2c;
+  --success:    #1a9648;
+  --warning:    #c47a00;
+
+  --text:       #1a1c22;
+  --text-soft:  #4a4d5a;
+  --muted:      #888c9a;
+
+  --shadow-sm:  0 2px 8px rgba(0,0,0,.08);
+  --shadow-md:  0 6px 24px rgba(0,0,0,.12);
+
+  --toggle-icon: "🌙";
+}
+
+/* ══════════════════════════════════════════
+   BASE
+══════════════════════════════════════════ */
+* { box-sizing:border-box; margin:0; padding:0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  transition: background .25s, color .25s;
+}
+
+.shell {
+  max-width: 1400px;
+  margin: auto;
+  padding: 24px;
+}
+
+/* ══════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════ */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 18px;
+}
+.logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 42px;
+  color: var(--accent);
+  letter-spacing: 2px;
+  transition: color .25s;
+}
+[data-theme="light"] .logo {
+  /* yellow stroke on light bg looks bad — use dark text */
+  color: var(--accent);
+}
+
+/* theme toggle */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 14px 6px 8px;
+  cursor: pointer;
+  transition: all .2s;
+  user-select: none;
+}
+.theme-toggle:hover {
+  border-color: var(--border-focus);
+}
+.toggle-track {
+  width: 36px;
+  height: 20px;
+  background: var(--border);
+  border-radius: 999px;
+  position: relative;
+  transition: background .25s;
+  flex-shrink: 0;
+}
+[data-theme="light"] .toggle-track {
+  background: var(--accent);
+}
+.toggle-thumb {
+  width: 14px;
+  height: 14px;
+  background: var(--text-soft);
+  border-radius: 50%;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  transition: transform .25s, background .25s;
+}
+[data-theme="light"] .toggle-thumb {
+  transform: translateX(16px);
+  background: #e8ff47;
+}
+.toggle-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+/* ══════════════════════════════════════════
+   TABS
+══════════════════════════════════════════ */
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.tab-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 10px 24px;
+  cursor: pointer;
+  border-radius: 8px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 1px;
+  transition: all .15s;
+}
+.tab-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.tab-btn.active {
+  background: var(--accent);
+  color: var(--accent-txt);
+  border-color: var(--accent);
+}
+
+/* ══════════════════════════════════════════
+   PANEL
+══════════════════════════════════════════ */
+.panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: background .25s, border-color .25s;
+}
+.panel-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background .25s;
+}
+.panel-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.panel-body { padding: 20px; }
+
+/* ══════════════════════════════════════════
+   SEARCH GRID
+══════════════════════════════════════════ */
+.search-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+.search-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.search-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ══════════════════════════════════════════
+   COMBOBOX
+══════════════════════════════════════════ */
+.combo-wrap { position: relative; }
+.combo-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0; right: 0;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 200;
+  display: none;
+  box-shadow: var(--shadow-md);
+}
+.combo-list.open { display: block; }
+.combo-item {
+  padding: 9px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-soft);
+  transition: background .1s;
+}
+.combo-item:hover {
+  background: var(--accent-dim);
+  color: var(--text);
+}
+.combo-item.no-match {
+  color: var(--muted);
+  font-style: italic;
+  cursor: default;
+}
+.combo-item.no-match:hover { background: transparent; }
+
+/* ══════════════════════════════════════════
+   FORMS
+══════════════════════════════════════════ */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+.form-field { display: flex; flex-direction: column; gap: 6px; }
+.form-field.full { grid-column: 1/-1; }
+.form-field.col2 { grid-column: span 2; }
+
+label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: .5px;
+}
+
+input, textarea, select {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  transition: border-color .15s, background .25s, color .25s;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+input::placeholder, textarea::placeholder {
+  color: var(--muted);
+  opacity: .6;
+}
+input[readonly] {
+  opacity: .45;
+  cursor: not-allowed;
+}
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+.error {
+  font-size: 11px;
+  color: var(--danger);
+  display: none;
+  font-family: 'DM Mono', monospace;
+}
+
+/* location selected pill */
+.location-selected {
+  background: var(--accent-dim);
+  border: 1px solid var(--border-focus);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+[data-theme="light"] .location-selected {
+  border-color: rgba(42,45,30,.3);
+}
+.location-selected.visible { display: flex; }
+.location-selected-text {
+  font-size: 13px;
+  color: var(--text);
+  font-weight: 500;
+}
+.location-selected-id {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+.location-clear {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 15px;
+  padding: 0 2px;
+  line-height: 1;
+  transition: color .15s;
+}
+.location-clear:hover { color: var(--danger); }
+
+/* ══════════════════════════════════════════
+   REPLICA ROWS
+══════════════════════════════════════════ */
+.replica-row {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 10px;
+  background: var(--surface);
+  transition: background .25s, border-color .25s;
+}
+.replica-grid {
+  display: grid;
+  grid-template-columns: 2fr 140px 110px 2fr 36px;
+  gap: 12px;
+  align-items: end;
+}
+@media(max-width:1100px){
+  .replica-grid { grid-template-columns: 1fr 1fr 1fr; }
+  .replica-grid > *:last-child { grid-column: 1/-1; text-align: right; }
+}
+
+/* ══════════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════════ */
+.btn {
+  background: var(--accent);
+  color: var(--accent-txt);
+  border: none;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  cursor: pointer;
+  letter-spacing: .5px;
+  transition: opacity .15s, transform .1s;
+  white-space: nowrap;
+}
+.btn:hover { opacity: .88; }
+.btn:active { transform: scale(.98); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.btn-ghost:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.btn-icon {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn-icon:hover {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--accent-dim);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* ══════════════════════════════════════════
+   TABLE
+══════════════════════════════════════════ */
+.hidden { display: none !important; }
+.table-wrap { overflow: auto; }
+.table { width: 100%; border-collapse: collapse; }
+.table th, .table td {
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  font-size: 14px;
+}
+.table th {
+  background: var(--surface);
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  transition: background .25s;
+}
+.table tr:last-child td { border-bottom: none; }
+.table tbody tr:hover td { background: var(--accent-dim); }
+.table td.mono {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--text-soft);
+}
+.table-empty td {
+  text-align: center;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  padding: 40px;
+}
+
+/* ══════════════════════════════════════════
+   BADGES
+══════════════════════════════════════════ */
+.badge {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+}
+.badge.ok { background: rgba(46,213,115,.15); color: var(--success); }
+.badge.no { background: rgba(255,92,92,.15);  color: var(--danger); }
+.badge.cat {
+  background: var(--accent-dim);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+[data-theme="dark"] .badge.cat { color: var(--accent); }
+
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+#toast {
+  position: fixed;
+  bottom: 28px; right: 28px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 13px 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  z-index: 999;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: all .25s;
+  pointer-events: none;
+  max-width: 340px;
+  box-shadow: var(--shadow-md);
+}
+#toast.show { opacity: 1; transform: translateY(0); }
+#toast.success { border-color: var(--success); color: var(--success); }
+#toast.error   { border-color: var(--danger);  color: var(--danger); }
+#toast.info    { border-color: var(--muted);   color: var(--muted); }
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════ */
+@media(max-width:900px){
+  .form-grid { grid-template-columns: 1fr; }
+  .form-field.col2, .form-field.full { grid-column: span 1; }
+  .search-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ── HEADER ── -->
+  <header>
+    <div class="logo">Events-TOP</div>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Cambia tema">
+      <div class="toggle-track"><div class="toggle-thumb"></div></div>
+      <span class="toggle-label" id="themeLabel">Dark</span>
+    </button>
+  </header>
+
+  <!-- ── TABS ── -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('events',this)">Events</button>
+    <button class="tab-btn" onclick="switchTab('locations',this)">Locations</button>
+    <button class="tab-btn" onclick="switchTab('users',this)">Users</button>
+  </div>
+
+  <!-- ════════════════════════════════════
+       EVENTS
+  ════════════════════════════════════ -->
+  <div id="events-section">
+
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Cerca Events</div></div>
+      <div class="panel-body">
+        <div class="search-grid">
+          <div class="search-field">
+            <label>Titolo</label>
+            <input type="text" id="evSearch_title" placeholder="es. La Traviata…">
+          </div>
+          <div class="search-field">
+            <label>Città</label>
+            <div class="combo-wrap">
+              <input type="text" id="evSearch_city" placeholder="es. Milano…" autocomplete="off"
+                oninput="comboFilter('evSearch_city','evCityList')"
+                onfocus="comboFilterAndOpen('evSearch_city','evCityList','cities')"
+                onblur="comboBlur('evCityList')">
+              <div class="combo-list" id="evCityList"></div>
+            </div>
+          </div>
+          <div class="search-field">
+            <label>Genere</label>
+            <div class="combo-wrap">
+              <input type="text" id="evSearch_genre" placeholder="es. Opera…" autocomplete="off"
+                oninput="comboFilter('evSearch_genre','evGenreList')"
+                onfocus="comboFilterAndOpen('evSearch_genre','evGenreList','genres')"
+                onblur="comboBlur('evGenreList')">
+              <div class="combo-list" id="evGenreList"></div>
+            </div>
+          </div>
+          <div class="search-field">
+            <label>&nbsp;</label>
+            <div class="search-actions">
+              <button class="btn-ghost" onclick="clearSearch(['evSearch_title','evSearch_city','evSearch_genre'])">Reset</button>
+              <button class="btn" onclick="searchEvents()">Cerca</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Crea / Modifica Event</div></div>
+      <div class="panel-body">
+        <form id="eventsForm" class="form-grid" onsubmit="submitEvent(event)">
+
+          <div class="form-field col2">
+            <label>Titolo IT *</label>
+            <input type="text" id="eventTitle" required placeholder="es. La Traviata">
+          </div>
+          <div class="form-field">
+            <label>Titolo EN</label>
+            <input type="text" id="eventTitleEng" placeholder="es. The Traviata">
+          </div>
+
+          <div class="form-field">
+            <label>Slug *</label>
+            <input type="text" id="eventSlug" required placeholder="auto-generato">
+          </div>
+          <div class="form-field">
+            <label>Genere *</label>
+            <select id="eventCategory" required>
+              <option value="">Seleziona</option>
+              <option value="Opera">Opera</option>
+              <option value="Musical">Musical</option>
+              <option value="Teatro contemporaneo">Teatro contemporaneo</option>
+              <option value="Danza teatrale">Danza teatrale</option>
+              <option value="Balletto">Balletto</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Durata</label>
+            <input type="text" id="eventDuration" placeholder="2h 30m">
+          </div>
+
+          <div class="form-field full">
+            <label>Descrizione IT *</label>
+            <textarea id="eventDescription" required></textarea>
+          </div>
+          <div class="form-field full">
+            <label>Descrizione EN</label>
+            <textarea id="eventDescriptionEng"></textarea>
+          </div>
+
+          <div class="form-field">
+            <label>Info URL IT</label>
+            <input type="url" id="eventInfoUrlIt" placeholder="https://…">
+          </div>
+          <div class="form-field col2">
+            <label>Info URL EN</label>
+            <input type="url" id="eventInfoUrlEng" placeholder="https://…">
+          </div>
+
+          <div class="form-field full">
+            <label>Repliche *</label>
+            <div id="replicasList"></div>
+            <button type="button" class="btn-ghost" style="margin-top:8px" onclick="addReplica()">+ Aggiungi replica</button>
+            <div class="error" id="errReplicas">Aggiungi almeno una replica con teatro e data</div>
+          </div>
+
+          <div class="form-field full form-actions">
+            <button type="button" class="btn-ghost" onclick="resetEventForm()">Reset</button>
+            <button type="submit" class="btn">Crea Event</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Events Table</div>
+        <span id="eventsCount" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)"></span>
+      </div>
+      <div class="panel-body table-wrap">
+        <table class="table">
+          <thead><tr><th>ID</th><th>Titolo</th><th>Slug</th><th>Genere</th><th>Repliche</th><th>Prossima Data / Teatro</th><th>Azioni</th></tr></thead>
+          <tbody id="eventsBody"><tr class="table-empty"><td colspan="7">In attesa dell'API Events…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       LOCATIONS
+  ════════════════════════════════════ -->
+  <div id="locations-section" class="hidden">
+
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Cerca Locations</div></div>
+      <div class="panel-body">
+        <div class="search-grid">
+          <div class="search-field">
+            <label>Nome Teatro</label>
+            <input type="text" id="locSearch_name" placeholder="es. La Scala…">
+          </div>
+          <div class="search-field">
+            <label>Città</label>
+            <div class="combo-wrap">
+              <input type="text" id="locSearch_city" placeholder="es. Milano…" autocomplete="off"
+                oninput="comboFilter('locSearch_city','locCityList')"
+                onfocus="comboFilterAndOpen('locSearch_city','locCityList','cities')"
+                onblur="comboBlur('locCityList')">
+              <div class="combo-list" id="locCityList"></div>
+            </div>
+          </div>
+          <div class="search-field">
+            <label>&nbsp;</label>
+            <div class="search-actions">
+              <button class="btn-ghost" onclick="clearSearch(['locSearch_name','locSearch_city'])">Reset</button>
+              <button class="btn" onclick="searchLocations()">Cerca</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Crea / Modifica Location</div></div>
+      <div class="panel-body">
+        <form id="locationsForm" class="form-grid" onsubmit="submitLocation(event)">
+
+          <div class="form-field col2">
+            <label>Nome *</label>
+            <input type="text" id="locName" required placeholder="es. Teatro alla Scala">
+          </div>
+          <div class="form-field">
+            <label>Slug *</label>
+            <input type="text" id="locSlug" required placeholder="auto-generato">
+          </div>
+
+          <div class="form-field">
+            <label>Città *</label>
+            <input type="text" id="locCity" required>
+          </div>
+          <div class="form-field">
+            <label>Regione *</label>
+            <input type="text" id="locRegion" required>
+          </div>
+          <div class="form-field">
+            <label>Capienza</label>
+            <input type="number" id="locCapacity" min="1">
+          </div>
+
+          <div class="form-field full">
+            <label>Indirizzo *</label>
+            <input type="text" id="locAddress" required>
+          </div>
+
+          <div class="form-field">
+            <label>Latitudine</label>
+            <input type="number" id="locLat" min="-90" max="90" step="0.000001">
+          </div>
+          <div class="form-field">
+            <label>Longitudine</label>
+            <input type="number" id="locLng" min="-180" max="180" step="0.000001">
+          </div>
+          <div class="form-field">
+            <label>Sito Web</label>
+            <input type="url" id="locWebsite" placeholder="https://…">
+          </div>
+
+          <div class="form-field">
+            <label>Servizi (EN)</label>
+            <select id="locServices" multiple size="6">
+              <option value="accessibility">accessibility</option>
+              <option value="bar">bar</option>
+              <option value="restrooms">restrooms</option>
+              <option value="parking">parking</option>
+              <option value="restaurant">restaurant</option>
+              <option value="wifi">wifi</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Servizi (IT)</label>
+            <select id="locServicesIt" multiple size="6">
+              <option value="accessibilità">accessibilità</option>
+              <option value="bar">bar</option>
+              <option value="servizi igienici">servizi igienici</option>
+              <option value="parcheggio">parcheggio</option>
+              <option value="ristorante">ristorante</option>
+              <option value="wifi">wifi</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Immagine Esterno (URL)</label>
+            <input type="url" id="locImgExt" placeholder="https://…">
+          </div>
+
+          <div class="form-field">
+            <label>Immagine Interno (URL)</label>
+            <input type="url" id="locImgInt" placeholder="https://…">
+          </div>
+          <div class="form-field">
+            <label>Piantina (URL)</label>
+            <input type="url" id="locFloorPlan" placeholder="https://…">
+          </div>
+
+          <div class="form-field full">
+            <label>Descrizione IT</label>
+            <textarea id="locDescriptionIt"></textarea>
+          </div>
+          <div class="form-field full">
+            <label>Descrizione EN</label>
+            <textarea id="locDescriptionEn"></textarea>
+          </div>
+
+          <div class="form-field full form-actions">
+            <button type="button" class="btn-ghost" onclick="resetLocationForm()">Reset</button>
+            <button type="submit" class="btn">Crea Location</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Locations Table</div>
+        <span id="locationsCount" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)"></span>
+      </div>
+      <div class="panel-body table-wrap">
+        <table class="table">
+          <thead><tr><th>ID</th><th>Nome</th><th>Slug</th><th>Città</th><th>Regione</th><th>Capienza</th><th>Azioni</th></tr></thead>
+          <tbody id="locationsBody"><tr class="table-empty"><td colspan="7">In attesa dell'API Locations…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       USERS
+  ════════════════════════════════════ -->
+  <div id="users-section" class="hidden">
+
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Cerca Users</div></div>
+      <div class="panel-body">
+        <div class="search-grid">
+          <div class="search-field">
+            <label>Username</label>
+            <input type="text" id="usrSearch_username" placeholder="es. mario_r…">
+          </div>
+          <div class="search-field">
+            <label>Email</label>
+            <input type="email" id="usrSearch_email" placeholder="es. mario@example.com">
+          </div>
+          <div class="search-field">
+            <label>&nbsp;</label>
+            <div class="search-actions">
+              <button class="btn-ghost" onclick="clearSearch(['usrSearch_username','usrSearch_email'])">Reset</button>
+              <button class="btn" onclick="searchUsers()">Cerca</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">Crea User</div></div>
+      <div class="panel-body">
+        <form id="usersForm" class="form-grid" onsubmit="submitUser(event)">
+          <div class="form-field"><label>Nome *</label><input type="text" id="userFirstName" required></div>
+          <div class="form-field"><label>Cognome *</label><input type="text" id="userLastName" required></div>
+          <div class="form-field"><label>Username *</label><input type="text" id="userUsername" required minlength="3"></div>
+          <div class="form-field"><label>Email *</label><input type="email" id="userEmail" required></div>
+          <div class="form-field"><label>Data di nascita *</label><input type="date" id="userDob" required></div>
+          <div class="form-field">
+            <label>Genere</label>
+            <select id="userGender">
+              <option value="guest">Guest</option>
+              <option value="male">Maschio</option>
+              <option value="female">Femmina</option>
+              <option value="other">Altro</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Password *</label>
+            <input type="password" id="password" minlength="8" required>
+          </div>
+          <div class="form-field">
+            <label>Conferma Password *</label>
+            <input type="password" id="confirmPassword" minlength="8" required>
+            <div class="error" id="passwordError"></div>
+          </div>
+          <div class="form-field">
+            <label>Verificato</label>
+            <select id="userVerified"><option value="false">No</option><option value="true">Sì</option></select>
+          </div>
+          <div class="form-field">
+            <label>Preferiti privati</label>
+            <select id="userPrivFav"><option value="false">No</option><option value="true">Sì</option></select>
+          </div>
+          <div class="form-field">
+            <label>Recensioni private</label>
+            <select id="userPrivRev"><option value="false">No</option><option value="true">Sì</option></select>
+          </div>
+          <div class="form-field">
+            <label>Immagine Profilo (URL)</label>
+            <input type="url" id="userAvatar">
+          </div>
+          <div class="form-field full form-actions">
+            <button type="button" class="btn-ghost" onclick="document.getElementById('usersForm').reset()">Reset</button>
+            <button type="submit" class="btn">Crea User</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Users Table</div>
+        <span id="usersCount" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)"></span>
+      </div>
+      <div class="panel-body table-wrap">
+        <table class="table">
+          <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Verificato</th><th>Azioni</th></tr></thead>
+          <tbody id="usersBody"><tr class="table-empty"><td colspan="5">In attesa dell'API Users…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ════════════════════════════════════
+   CONFIG
+════════════════════════════════════ */
+const API = {
+  BASE:      'http://localhost:5000/api',
+  events:    '/events',
+  locations: '/locations',
+  users:     '/users',
+};
+
+const GENRES = ['Opera','Musical','Teatro contemporaneo','Danza teatrale','Balletto'];
+let locationsCache  = [];
+let citiesCache     = [];
+let eventsCache     = [];
+let usersCache      = [];
+let _editEventId    = null;
+let _editLocationId = null;
+let _editUserId     = null;
+
+/* ════════════════════════════════════
+   THEME
+════════════════════════════════════ */
+function toggleTheme(){
+  const html  = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  const next   = isDark ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  document.getElementById('themeLabel').textContent = next === 'dark' ? 'Dark' : 'Light';
+  localStorage.setItem('evtop-theme', next);
+}
+
+(function initTheme(){
+  const saved = localStorage.getItem('evtop-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  // label is set after DOM ready
+})();
+
+/* ════════════════════════════════════
+   TABS
+════════════════════════════════════ */
+const SECTIONS = ['events','locations','users'];
+function switchTab(tab, btn){
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  SECTIONS.forEach(s => document.getElementById(`${s}-section`).classList.add('hidden'));
+  document.getElementById(`${tab}-section`).classList.remove('hidden');
+}
+
+/* ════════════════════════════════════
+   TOAST
+════════════════════════════════════ */
+let _toastTimer;
+function toast(msg, type='info'){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.className = '', 3400);
+}
+
+/* ════════════════════════════════════
+   SLUG HELPER
+════════════════════════════════════ */
+function toSlug(str){
+  return str.toLowerCase().trim()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9\s-]/g,'')
+    .replace(/\s+/g,'-')
+    .replace(/-+/g,'-');
+}
+
+/* ════════════════════════════════════
+   COMBOBOX
+════════════════════════════════════ */
+function comboBlur(listId){
+  setTimeout(() => {
+    const el = document.getElementById(listId);
+    if(el) el.classList.remove('open');
+  }, 160);
+}
+
+function comboFilterAndOpen(inputId, listId, source){
+  comboFilter(inputId, listId, source);
+  document.getElementById(listId).classList.add('open');
+}
+
+function comboFilter(inputId, listId, sourceHint){
+  const val  = document.getElementById(inputId).value.toLowerCase();
+  const list = document.getElementById(listId);
+  list.innerHTML = '';
+
+  const pool = sourceHint === 'genres' ? GENRES : citiesCache;
+  const hits = pool.filter(s => !val || s.toLowerCase().includes(val));
+
+  if(!hits.length){
+    const d = document.createElement('div');
+    d.className = 'combo-item no-match';
+    d.textContent = 'Nessun risultato';
+    list.appendChild(d);
+    list.classList.add('open');
+    return;
+  }
+  hits.forEach(s => {
+    const d = document.createElement('div');
+    d.className = 'combo-item';
+    d.textContent = s;
+    d.addEventListener('mousedown', e => {
+      e.preventDefault();
+      document.getElementById(inputId).value = s;
+      list.classList.remove('open');
+    });
+    list.appendChild(d);
+  });
+  list.classList.add('open');
+}
+
+/* ════════════════════════════════════
+   REPLICHE — gestione dinamica righe
+════════════════════════════════════ */
+let _repIdx = 0;
+
+function replicaRowHTML(idx, prefill) {
+  prefill = prefill || {};
+  const repId    = prefill.id           || null;
+  const showDate = prefill.show_date    || '';
+  const date     = showDate.substring(0, 10);
+  const time     = showDate.length > 10 ? showDate.substring(11, 16) : '';
+  const locLabel = prefill.location_name
+    ? prefill.location_name + (prefill.location_city ? ' — ' + prefill.location_city : '')
+    : '';
+  const locId    = prefill.location_id  || '';
+  const ticket   = prefill.ticket_url   || '';
+  const badge    = repId
+    ? `<span class="badge ok" style="margin-bottom:4px;display:inline-block">Replica #${repId}</span>`
+    : `<span class="badge" style="background:var(--accent-dim);color:var(--muted);margin-bottom:4px;display:inline-block">Nuova</span>`;
+  return `<div class="replica-row" id="rep_${idx}">
+  ${badge}
+  <div class="replica-grid">
+    <div>
+      <label>Teatro *</label>
+      <div class="combo-wrap">
+        <input type="text" id="repLocSearch_${idx}" value="${locLabel.replace(/"/g,'&quot;')}"
+          placeholder="Cerca teatro…" autocomplete="off"
+          oninput="repComboFilter(${idx})"
+          onfocus="repComboFilter(${idx},true)"
+          onblur="comboBlur('repComboList_${idx}')">
+        <div class="combo-list" id="repComboList_${idx}"></div>
+      </div>
+      <input type="hidden" id="repLocId_${idx}" value="${locId}">
+    </div>
+    <div>
+      <label>Data *</label>
+      <input type="date" id="repDate_${idx}" value="${date}">
+    </div>
+    <div>
+      <label>Ora</label>
+      <input type="time" id="repTime_${idx}" value="${time}">
+    </div>
+    <div>
+      <label>URL Biglietti</label>
+      <input type="url" id="repTicket_${idx}" value="${ticket.replace(/"/g,'&quot;')}" placeholder="https://…">
+    </div>
+    <div style="display:flex;align-items:flex-end">
+      <button type="button" class="btn-icon"
+        style="border-color:var(--danger);color:var(--danger)"
+        onclick="removeReplica(${idx})" title="Rimuovi replica">✕</button>
+    </div>
+  </div>
+</div>`;
+}
+
+function addReplica(prefill) {
+  const container = document.getElementById('replicasList');
+  const wrap = document.createElement('div');
+  wrap.innerHTML = replicaRowHTML(_repIdx, prefill || {});
+  container.appendChild(wrap.firstElementChild);
+  _repIdx++;
+}
+
+function removeReplica(idx) {
+  const row = document.getElementById('rep_' + idx);
+  if(row) row.remove();
+}
+
+function repComboFilter(idx, showAll) {
+  const input = document.getElementById('repLocSearch_' + idx);
+  const list  = document.getElementById('repComboList_' + idx);
+  if(!input || !list) return;
+  const val = input.value.toLowerCase().trim();
+  list.innerHTML = '';
+  if(!val && !showAll){ list.classList.remove('open'); return; }
+  const hits = locationsCache
+    .filter(l => !val || l.name.toLowerCase().includes(val) || l.city.toLowerCase().includes(val))
+    .slice(0, 14);
+  if(!hits.length){
+    list.innerHTML = '<div class="combo-item no-match">Nessuna location trovata</div>';
+    list.classList.add('open');
+    return;
+  }
+  hits.forEach(loc => {
+    const d = document.createElement('div');
+    d.className = 'combo-item';
+    d.innerHTML = `${loc.name} <span style="color:var(--muted);font-size:12px">— ${loc.city}</span>`;
+    d.addEventListener('mousedown', ev => {
+      ev.preventDefault();
+      input.value = loc.name + ' — ' + loc.city;
+      document.getElementById('repLocId_' + idx).value = loc.id;
+      list.classList.remove('open');
+    });
+    list.appendChild(d);
+  });
+  list.classList.add('open');
+}
+
+function getReplicasData() {
+  return Array.from(document.querySelectorAll('.replica-row')).map(row => {
+    const idx = row.id.replace('rep_', '');
+    return {
+      location_id: document.getElementById('repLocId_' + idx)?.value  || null,
+      date:        document.getElementById('repDate_'  + idx)?.value  || null,
+      time:        document.getElementById('repTime_'  + idx)?.value  || null,
+      ticket_url:  document.getElementById('repTicket_' + idx)?.value || null,
+    };
+  }).filter(r => r.location_id && r.date);
+}
+
+function resetEventForm() {
+  document.getElementById('eventsForm').reset();
+  document.getElementById('replicasList').innerHTML = '';
+  _repIdx = 0;
+  addReplica();
+  _editEventId = null;
+  document.querySelector('#eventsForm button[type="submit"]').textContent = 'Crea Event';
+}
+
+/* ════════════════════════════════════
+   API HELPER
+════════════════════════════════════ */
+async function apiFetch(path, opts={}){
+  const res = await fetch(API.BASE + path, {
+    headers: {'Content-Type':'application/json'},
+    ...opts,
+  });
+  if(!res.ok){
+    const err = await res.json().catch(() => ({message: res.statusText}));
+    throw new Error(err.message || res.statusText);
+  }
+  return res.json();
+}
+
+/* ════════════════════════════════════
+   LOCATIONS — cache
+════════════════════════════════════ */
+async function loadLocationsCache(){
+  try {
+    const data = await apiFetch(API.locations);
+    locationsCache = (data.locations || data || []).map(l => ({
+      id:             l.id,
+      name:           l.name           || '',
+      city:           l.city           || '',
+      slug:           l.slug           || '',
+      region:         l.region         || '',
+      address:        l.address        || '',
+      latitude:       l.latitude       ?? null,
+      longitude:      l.longitude      ?? null,
+      capacity:       l.capacity       ?? null,
+      services:       Array.isArray(l.services)    ? l.services    : [],
+      services_it:    Array.isArray(l.services_it) ? l.services_it : [],
+      link:           l.link           || '',
+      image_est:      l.image_est      || '',
+      image_int:      l.image_int      || '',
+      floor_plan:     l.floor_plan     || '',
+      description_it: l.description_it || '',
+      description_en: l.description_en || '',
+    }));
+    citiesCache = [...new Set(locationsCache.map(l => l.city))].sort();
+    renderLocationsTable(locationsCache);
+  } catch(e){
+    console.warn('Locations API non raggiungibile:', e.message);
+  }
+}
+
+/* ════════════════════════════════════
+   EVENTS
+════════════════════════════════════ */
+async function searchEvents(){
+  const p = new URLSearchParams();
+  const t = document.getElementById('evSearch_title').value.trim();
+  const c = document.getElementById('evSearch_city').value.trim();
+  const g = document.getElementById('evSearch_genre').value.trim();
+  if(t) p.set('title', t);
+  if(c) p.set('city',  c);
+  if(g) p.set('category', g);
+  try {
+    const data = await apiFetch(`${API.events}?${p}`);
+    renderEventsTable(data.events || data || []);
+  } catch(e){ toast('Errore ricerca events: '+e.message,'error'); }
+}
+
+async function submitEvent(e){
+  e.preventDefault();
+  const replicas = getReplicasData();
+  if(!replicas.length){
+    document.getElementById('errReplicas').style.display = 'block';
+    return;
+  }
+  document.getElementById('errReplicas').style.display = 'none';
+  const body = {
+    title:           document.getElementById('eventTitle').value.trim(),
+    title_eng:       document.getElementById('eventTitleEng').value.trim()      || null,
+    slug:            document.getElementById('eventSlug').value.trim(),
+    category:        document.getElementById('eventCategory').value,
+    duration:        document.getElementById('eventDuration').value             || null,
+    description:     document.getElementById('eventDescription').value,
+    description_eng: document.getElementById('eventDescriptionEng').value      || null,
+    info_url_it:     document.getElementById('eventInfoUrlIt').value            || null,
+    info_url_eng:    document.getElementById('eventInfoUrlEng').value           || null,
+    replicas,
+  };
+  try {
+    if(_editEventId){
+      await apiFetch(`${API.events}/${_editEventId}`, {method:'PUT', body:JSON.stringify(body)});
+      toast('Evento aggiornato!','success');
+    } else {
+      await apiFetch(API.events, {method:'POST', body:JSON.stringify(body)});
+      toast('Evento creato!','success');
+    }
+    resetEventForm();
+    searchEvents();
+  } catch(ex){ toast('Errore: '+ex.message,'error'); }
+}
+
+function renderEventsTable(rows){
+  eventsCache = rows;
+  const tb = document.getElementById('eventsBody');
+  document.getElementById('eventsCount').textContent = `${rows.length} risultati`;
+  if(!rows.length){
+    tb.innerHTML = '<tr class="table-empty"><td colspan="7">Nessun evento trovato</td></tr>';
+    return;
+  }
+  tb.innerHTML = rows.map(r => {
+    const reps  = Array.isArray(r.replicas) ? r.replicas : [];
+    const total = reps.length;
+    const future= reps.filter(x => !x.is_past).length;
+    const repBadge = total === 0
+      ? '<span class="badge no">nessuna</span>'
+      : `<span class="badge cat">${total} replica${total===1?'':'e'}</span>`
+        + (future > 0 ? `<br><span style="font-size:11px;color:var(--muted)">${future} future</span>` : '');
+    const nextDate = r.next_show_date || '—';
+    const nextLoc  = r.next_location_name || '—';
+    return `
+    <tr>
+      <td class="mono">${r.id}</td>
+      <td>
+        ${r.title||'—'}
+        ${r.title_eng ? `<br><span style="font-size:11px;color:var(--muted)">${r.title_eng}</span>` : ''}
+      </td>
+      <td class="mono">${r.slug||'—'}</td>
+      <td><span class="badge cat">${r.category||'—'}</span></td>
+      <td>${repBadge}</td>
+      <td style="font-size:12px;font-family:'DM Mono',monospace">
+        ${nextDate}<br><span style="color:var(--muted)">${nextLoc}</span>
+      </td>
+      <td style="white-space:nowrap">
+        <button class="btn-icon" onclick="editEvent(${r.id})" title="Modifica">✎</button>
+        <button class="btn-icon" style="margin-left:4px;border-color:var(--danger);color:var(--danger)" onclick="deleteEvent(${r.id})" title="Elimina">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+/* ════════════════════════════════════
+   LOCATIONS
+════════════════════════════════════ */
+async function searchLocations(){
+  const p = new URLSearchParams();
+  const n = document.getElementById('locSearch_name').value.trim();
+  const c = document.getElementById('locSearch_city').value.trim();
+  if(n) p.set('name', n);
+  if(c) p.set('city', c);
+  try {
+    const data = await apiFetch(`${API.locations}?${p}`);
+    renderLocationsTable(data.locations || data || []);
+  } catch(e){ toast('Errore ricerca locations: '+e.message,'error'); }
+}
+
+async function submitLocation(e){
+  e.preventDefault();
+  const services    = [...document.getElementById('locServices').selectedOptions].map(o=>o.value);
+  const services_it = [...document.getElementById('locServicesIt').selectedOptions].map(o=>o.value);
+  const body = {
+    name:           document.getElementById('locName').value.trim(),
+    slug:           document.getElementById('locSlug').value.trim(),
+    city:           document.getElementById('locCity').value.trim(),
+    region:         document.getElementById('locRegion').value.trim(),
+    address:        document.getElementById('locAddress').value.trim(),
+    latitude:       parseFloat(document.getElementById('locLat').value)      || null,
+    longitude:      parseFloat(document.getElementById('locLng').value)      || null,
+    capacity:       parseInt(document.getElementById('locCapacity').value)   || null,
+    services,
+    services_it,
+    website:        document.getElementById('locWebsite').value              || null,
+    img_exterior:   document.getElementById('locImgExt').value               || null,
+    img_interior:   document.getElementById('locImgInt').value               || null,
+    floor_plan_url: document.getElementById('locFloorPlan').value            || null,
+    description_it: document.getElementById('locDescriptionIt').value        || null,
+    description_en: document.getElementById('locDescriptionEn').value        || null,
+  };
+  try {
+    if(_editLocationId){
+      await apiFetch(`${API.locations}/${_editLocationId}`, {method:'PUT', body:JSON.stringify(body)});
+      toast('Location aggiornata!','success');
+    } else {
+      await apiFetch(API.locations, {method:'POST', body:JSON.stringify(body)});
+      toast('Location creata!','success');
+    }
+    resetLocationForm();
+    await loadLocationsCache();
+  } catch(ex){ toast('Errore: '+ex.message,'error'); }
+}
+
+function renderLocationsTable(rows){
+  const tb = document.getElementById('locationsBody');
+  document.getElementById('locationsCount').textContent = `${rows.length} risultati`;
+  if(!rows.length){
+    tb.innerHTML = '<tr class="table-empty"><td colspan="7">Nessuna location trovata</td></tr>';
+    return;
+  }
+  tb.innerHTML = rows.map(r => `
+    <tr>
+      <td class="mono">${r.id}</td>
+      <td>${r.name||'—'}</td>
+      <td class="mono">${r.slug||'—'}</td>
+      <td>${r.city||'—'}</td>
+      <td>${r.region||'—'}</td>
+      <td class="mono">${r.capacity??'—'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn-icon" onclick="editLocation(${r.id})" title="Modifica">✎</button>
+        <button class="btn-icon" style="margin-left:4px;border-color:var(--danger);color:var(--danger)" onclick="deleteLocation(${r.id})" title="Elimina">✕</button>
+      </td>
+    </tr>`).join('');
+}
+
+/* ════════════════════════════════════
+   USERS
+════════════════════════════════════ */
+async function searchUsers(){
+  const p = new URLSearchParams();
+  const u = document.getElementById('usrSearch_username').value.trim();
+  const em= document.getElementById('usrSearch_email').value.trim();
+  if(u)  p.set('username', u);
+  if(em) p.set('email',    em);
+  try {
+    const data = await apiFetch(`${API.users}?${p}`);
+    renderUsersTable(data.users || data || []);
+  } catch(e){ toast('Errore ricerca users: '+e.message,'error'); }
+}
+
+async function submitUser(e){
+  e.preventDefault();
+  const pwd = document.getElementById('password').value;
+  const cfm = document.getElementById('confirmPassword').value;
+  const err = document.getElementById('passwordError');
+  if(!_editUserId && pwd !== cfm){
+    err.style.display = 'block'; err.textContent = 'Le password non coincidono'; return;
+  }
+  if(_editUserId && pwd && pwd !== cfm){
+    err.style.display = 'block'; err.textContent = 'Le password non coincidono'; return;
+  }
+  err.style.display = 'none';
+  const body = {
+    first_name:        document.getElementById('userFirstName').value.trim(),
+    last_name:         document.getElementById('userLastName').value.trim(),
+    username:          document.getElementById('userUsername').value.trim(),
+    email:             document.getElementById('userEmail').value.trim(),
+    date_of_birth:     document.getElementById('userDob').value,
+    gender:            document.getElementById('userGender').value,
+    verified:          document.getElementById('userVerified').value==='true',
+    private_favorites: document.getElementById('userPrivFav').value==='true',
+    private_reviews:   document.getElementById('userPrivRev').value==='true',
+    avatar_url:        document.getElementById('userAvatar').value||null,
+  };
+  if(pwd) body.password = pwd;
+  try {
+    if(_editUserId){
+      await apiFetch(`${API.users}/${_editUserId}`, {method:'PUT', body:JSON.stringify(body)});
+      toast('Utente aggiornato!','success');
+      _editUserId = null;
+      document.querySelector('#usersForm button[type="submit"]').textContent = 'Crea User';
+    } else {
+      if(!body.password){ toast('Password obbligatoria','error'); return; }
+      await apiFetch(API.users, {method:'POST', body:JSON.stringify(body)});
+      toast('Utente creato!','success');
+    }
+    document.getElementById('usersForm').reset();
+    searchUsers();
+  } catch(e){ toast('Errore: '+e.message,'error'); }
+}
+
+function renderUsersTable(rows){
+  usersCache = rows;
+  const tb = document.getElementById('usersBody');
+  document.getElementById('usersCount').textContent = `${rows.length} risultati`;
+  if(!rows.length){
+    tb.innerHTML = '<tr class="table-empty"><td colspan="5">Nessun utente trovato</td></tr>';
+    return;
+  }
+  tb.innerHTML = rows.map(r => `
+    <tr>
+      <td class="mono">${r.id}</td>
+      <td>${r.username||'—'}</td>
+      <td>${r.email||'—'}</td>
+      <td><span class="badge ${r.verified?'ok':'no'}">${r.verified?'Sì':'No'}</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn-icon" onclick="editUser(${r.id})" title="Modifica">✎</button>
+        <button class="btn-icon" style="margin-left:4px;border-color:var(--danger);color:var(--danger)" onclick="deleteUser(${r.id})" title="Elimina">✕</button>
+      </td>
+    </tr>`).join('');
+}
+
+/* ════════════════════════════════════
+   EDIT
+════════════════════════════════════ */
+function editEvent(id){
+  const ev = eventsCache.find(r => r.id === id);
+  if(!ev){ toast('Evento non trovato in cache — esegui una ricerca prima','error'); return; }
+
+  document.getElementById('eventTitle').value          = ev.title           || '';
+  document.getElementById('eventTitleEng').value       = ev.title_eng       || '';
+  document.getElementById('eventSlug').value           = ev.slug            || '';
+  document.getElementById('eventCategory').value       = ev.category        || '';
+  document.getElementById('eventDuration').value       = ev.duration        || '';
+  document.getElementById('eventDescription').value    = ev.description     || '';
+  document.getElementById('eventDescriptionEng').value = ev.description_eng || '';
+  document.getElementById('eventInfoUrlIt').value      = ev.info_url_it     || '';
+  document.getElementById('eventInfoUrlEng').value     = ev.info_url_eng    || '';
+
+  // Popolamento repliche
+  document.getElementById('replicasList').innerHTML = '';
+  _repIdx = 0;
+  const reps = Array.isArray(ev.replicas) && ev.replicas.length ? ev.replicas : [{}];
+  reps.forEach(rep => addReplica(rep));
+
+  _editEventId = id;
+  document.querySelector('#eventsForm button[type="submit"]').textContent = 'Aggiorna Event';
+  document.getElementById('eventsForm').scrollIntoView({behavior:'smooth'});
+}
+
+function editLocation(id){
+  const loc = locationsCache.find(l => l.id === id);
+  if(!loc){ toast('Location non trovata in cache — ricarica la pagina','error'); return; }
+
+  document.getElementById('locName').value          = loc.name           || '';
+  document.getElementById('locSlug').value          = loc.slug           || '';
+  document.getElementById('locCity').value          = loc.city           || '';
+  document.getElementById('locRegion').value        = loc.region         || '';
+  document.getElementById('locAddress').value       = loc.address        || '';
+  document.getElementById('locLat').value           = loc.latitude       != null ? loc.latitude  : '';
+  document.getElementById('locLng').value           = loc.longitude      != null ? loc.longitude : '';
+  document.getElementById('locCapacity').value      = loc.capacity       != null ? loc.capacity  : '';
+  document.getElementById('locWebsite').value       = loc.link           || '';
+  document.getElementById('locImgExt').value        = loc.image_est      || '';
+  document.getElementById('locImgInt').value        = loc.image_int      || '';
+  document.getElementById('locFloorPlan').value     = loc.floor_plan     || '';
+  document.getElementById('locDescriptionIt').value = loc.description_it || '';
+  document.getElementById('locDescriptionEn').value = loc.description_en || '';
+
+  // multiselect services EN
+  const svEN = document.getElementById('locServices');
+  Array.from(svEN.options).forEach(o => {
+    o.selected = (loc.services || []).includes(o.value);
+  });
+  // multiselect services IT
+  const svIT = document.getElementById('locServicesIt');
+  Array.from(svIT.options).forEach(o => {
+    o.selected = (loc.services_it || []).includes(o.value);
+  });
+
+  _editLocationId = id;
+  document.querySelector('#locationsForm button[type="submit"]').textContent = 'Salva Modifiche';
+  document.getElementById('locationsForm').scrollIntoView({behavior:'smooth'});
+}
+
+function resetLocationForm(){
+  document.getElementById('locationsForm').reset();
+  _editLocationId = null;
+  document.querySelector('#locationsForm button[type="submit"]').textContent = 'Crea Location';
+}
+
+function editUser(id){
+  const u = usersCache.find(u => u.id === id);
+  if(!u){ toast('Utente non trovato in cache — esegui una ricerca prima','error'); return; }
+  document.getElementById('userFirstName').value = u.first_name || '';
+  document.getElementById('userLastName').value  = u.last_name  || '';
+  document.getElementById('userUsername').value  = u.username   || '';
+  document.getElementById('userEmail').value     = u.email      || '';
+  document.getElementById('userDob').value       = u.date_of_birth
+    ? String(u.date_of_birth).substring(0,10) : '';
+  document.getElementById('userGender').value    = u.gender     || 'guest';
+  document.getElementById('userVerified').value  = u.verified   ? 'true' : 'false';
+  document.getElementById('userPrivFav').value   = u.private_favorites ? 'true' : 'false';
+  document.getElementById('userPrivRev').value   = u.private_reviews   ? 'true' : 'false';
+  document.getElementById('userAvatar').value    = u.profile_image || '';
+  document.getElementById('password').value        = '';
+  document.getElementById('confirmPassword').value = '';
+  _editUserId = id;
+  document.querySelector('#usersForm button[type="submit"]').textContent = 'Salva Modifiche';
+  document.getElementById('usersForm').scrollIntoView({behavior:'smooth'});
+}
+
+/* ════════════════════════════════════
+   DELETE
+════════════════════════════════════ */
+async function deleteEvent(id){
+  if(!confirm(`Eliminare l'evento #${id}? L'operazione non è reversibile.`)) return;
+  try {
+    await apiFetch(`${API.events}/${id}`, {method:'DELETE'});
+    toast('Evento eliminato','success');
+    searchEvents();
+  } catch(ex){ toast('Errore: '+ex.message,'error'); }
+}
+
+async function deleteLocation(id){
+  if(!confirm(`Eliminare la location #${id}?\nATTENZIONE: verranno eliminati anche tutti gli eventi associati.`)) return;
+  try {
+    await apiFetch(`${API.locations}/${id}`, {method:'DELETE'});
+    toast('Location eliminata','success');
+    await loadLocationsCache();
+  } catch(ex){ toast('Errore: '+ex.message,'error'); }
+}
+
+async function deleteUser(id){
+  if(!confirm(`Eliminare l'utente #${id}? L'operazione non è reversibile.`)) return;
+  try {
+    await apiFetch(`${API.users}/${id}`, {method:'DELETE'});
+    toast('Utente eliminato','success');
+    searchUsers();
+  } catch(ex){ toast('Errore: '+ex.message,'error'); }
+}
+
+/* ════════════════════════════════════
+   UTILS
+════════════════════════════════════ */
+function clearSearch(ids){ ids.forEach(id => document.getElementById(id).value=''); }
+
+/* ════════════════════════════════════
+   INIT
+════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('evtop-theme') || 'dark';
+  document.getElementById('themeLabel').textContent = saved === 'dark' ? 'Dark' : 'Light';
+
+  document.getElementById('eventTitle').addEventListener('input', function(){
+    document.getElementById('eventSlug').value = toSlug(this.value);
+  });
+  document.getElementById('locName').addEventListener('input', function(){
+    document.getElementById('locSlug').value = toSlug(this.value);
+  });
+
+  addReplica(); // riga replica iniziale vuota
+  loadLocationsCache();
+});
+</script>
+</body>
+</html>
