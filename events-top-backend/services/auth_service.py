@@ -13,6 +13,33 @@ class AuthService:
     _register_lock = {}
     _otp_attempts = {}
 
+    @staticmethod
+    def _normalize_email(email):
+        return (email or "").strip().lower()
+
+    @staticmethod
+    def _normalize_gender(gender):
+        if not gender:
+            return None
+        normalized = str(gender).strip().lower()
+        mapping = {
+            "m": "male",
+            "male": "male",
+            "f": "female",
+            "female": "female",
+            "o": "other",
+            "other": "other",
+            "altro": "other",
+            "non-binary": "non-binary",
+            "guest": "guest",
+        }
+        return mapping.get(normalized, normalized)
+
+    @staticmethod
+    def _send_otp_or_fail(email, otp, username):
+        if not EmailService.send_otp(email, otp, username):
+            raise RuntimeError("Impossibile inviare il codice OTP")
+
     # ----------------------------
     # UTILITY: NORMALIZZA DATETIME
     # ----------------------------
@@ -44,6 +71,12 @@ class AuthService:
                       birthday=None, gender=None):
 
         now = datetime.now(timezone.utc)
+        username = (username or "").strip()
+        email = AuthService._normalize_email(email)
+        gender = AuthService._normalize_gender(gender)
+
+        if not EmailService.is_configured():
+            raise RuntimeError("Servizio email non configurato")
 
         last_call = AuthService._register_lock.get(email)
         if last_call and (now - last_call).total_seconds() < 3:
@@ -77,7 +110,7 @@ class AuthService:
                 otp_expires_at=expires
             )
 
-            EmailService.send_otp(email, otp, username)
+            AuthService._send_otp_or_fail(email, otp, username)
 
             return {
                 "message": "Nuovo OTP inviato",
@@ -106,7 +139,7 @@ class AuthService:
             otp_expires_at=expires
         )
 
-        EmailService.send_otp(email, otp, username)
+        AuthService._send_otp_or_fail(email, otp, username)
 
         return {
             "message": "OTP inviato",
@@ -179,7 +212,7 @@ class AuthService:
         expires = now + timedelta(minutes=Config.OTP_EXPIRY_MINUTES)
 
         AuthRepository.update_otp(user_id, otp_hash, expires)
-        EmailService.send_otp(user["email"], otp, user["username"])
+        AuthService._send_otp_or_fail(user["email"], otp, user["username"])
 
         return {"message": "Nuovo OTP inviato"}
 
@@ -190,6 +223,7 @@ class AuthService:
     def login_user(email, password):
 
         now = datetime.now(timezone.utc)
+        email = AuthService._normalize_email(email)
 
         attempts = AuthService._login_attempts.get(email, {
             "count": 0,

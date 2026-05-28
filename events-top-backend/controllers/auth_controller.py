@@ -34,6 +34,8 @@ def register():
 
     except ValueError as e:
         return jsonify({'error': str(e)}), 409
+    except RuntimeError as e:
+        return jsonify({'error': str(e)}), 503
     except Exception:
         traceback.print_exc()
         return jsonify({'error': 'Errore del server'}), 500
@@ -52,6 +54,8 @@ def verify_otp():
 
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
+    except RuntimeError as e:
+        return jsonify({'error': str(e)}), 503
     except Exception:
         traceback.print_exc()
         return jsonify({'error': 'Errore del server'}), 500
@@ -70,6 +74,8 @@ def resend_otp():
 
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
+    except RuntimeError as e:
+        return jsonify({'error': str(e)}), 503
     except Exception:
         traceback.print_exc()
         return jsonify({'error': 'Errore del server'}), 500

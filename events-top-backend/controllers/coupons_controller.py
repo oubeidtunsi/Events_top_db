@@ -1,11 +1,56 @@
 from flask import Blueprint, request, jsonify
 from services.coupons_service import CouponsService
+from services.email_service import EmailService
+from repositories.auth_repository import AuthRepository
 from utils.decorators import token_required
 from datetime import datetime
 import traceback
 
 coupons_bp = Blueprint('coupons', __name__)
 
+
+@coupons_bp.route('/send-email', methods=['POST'])
+@token_required
+def send_coupon_email(current_user):
+    """
+    Invia via email un coupon generato dal gioco.
+    Body JSON: { "coupon_code": "AbCd1020", "discount": 10 }
+    """
+    try:
+        data = request.get_json() or {}
+        coupon_code = data.get('coupon_code', '').strip()
+        discount = data.get('discount', 0)
+
+        if not coupon_code:
+            return jsonify({'error': 'coupon_code obbligatorio'}), 400
+
+        user = AuthRepository.find_by_id(current_user['user_id'])
+        email_address = current_user.get('email') or (user.get('email') if user else None)
+        username = (user.get('username') if user else None) or 'Utente'
+
+        if not email_address:
+            return jsonify({'error': 'Email utente non trovata'}), 400
+        if not EmailService.is_configured():
+            return jsonify({'error': 'Servizio email non configurato'}), 503
+
+        discount_str = str(discount) + '%'
+        html_body = CouponsService._compose_coupon_email(username, coupon_code, discount_str)
+
+        sent = EmailService.send_coupon_email(
+            recipient_email=email_address,
+            username=username,
+            coupon_code=coupon_code,
+            discount=discount_str,
+            html_body=html_body
+        )
+
+        if sent:
+            return jsonify({'message': 'Email inviata con successo'}), 200
+        return jsonify({'error': 'Errore durante l\'invio dell\'email'}), 500
+
+    except Exception:
+        traceback.print_exc()
+        return jsonify({'error': 'Errore interno'}), 500
 
 @coupons_bp.route('/redeem', methods=['POST'])
 @token_required
