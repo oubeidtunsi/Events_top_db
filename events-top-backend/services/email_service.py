@@ -1,34 +1,19 @@
-# Importa modulo per generare numeri casuali
 import random
-
-# Importa libreria SMTP
 import smtplib
-
-# Importa modulo per generare stringhe
 import string
-
-# Importa oggetti per costruire email HTML
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-# Importa configurazione progetto
 from config import Config
 
 
 class EmailService:
 
-    # Timeout connessione SMTP in secondi
     SMTP_TIMEOUT_SECONDS = 20
-
-    # Ultimo errore salvato
     last_error = None
 
     @staticmethod
     def generate_otp(length=6):
-        """
-        Genera OTP numerico
-        """
-
         return ''.join(
             random.choices(
                 string.digits,
@@ -38,36 +23,20 @@ class EmailService:
 
     @staticmethod
     def is_configured():
-
-        """
-        Controlla che email e password siano configurate
-        """
-
         return bool(
-            Config.EMAIL_ADDRESS
-            and
+            Config.EMAIL_ADDRESS and
             Config.EMAIL_PASSWORD
         )
 
     @staticmethod
     def get_last_error():
-
-        """
-        Restituisce ultimo errore
-        """
-
         return EmailService.last_error or "Errore sconosciuto"
 
     @staticmethod
-    def _send_html(
-        recipient_email,
-        subject,
-        html_body
-    ):
+    def _send_html(recipient_email, subject, html_body):
 
         EmailService.last_error = None
 
-        # Controlla configurazione
         if not EmailService.is_configured():
 
             EmailService.last_error = (
@@ -80,13 +49,10 @@ class EmailService:
 
             return False
 
-        # Costruzione email
         msg = MIMEMultipart("alternative")
 
         msg["Subject"] = subject
-
         msg["From"] = Config.EMAIL_ADDRESS
-
         msg["To"] = recipient_email
 
         msg.attach(
@@ -98,7 +64,6 @@ class EmailService:
 
         payload = msg.as_string()
 
-        # Prova invio sulle porte disponibili
         for port in EmailService._smtp_ports():
 
             if EmailService._send_with_port(
@@ -111,62 +76,59 @@ class EmailService:
 
         return False
 
-   @staticmethod
-   def _smtp_ports():
+    @staticmethod
+    def _smtp_ports():
+        return [Config.SMTP_PORT]
 
-    # Usa esclusivamente la porta configurata
-    return [Config.SMTP_PORT]
+    @staticmethod
+    def _send_with_port(
+        recipient_email,
+        payload,
+        port
+    ):
 
-   @staticmethod
-   def _send_with_port(
-    recipient_email,
-    payload,
-    port
-   ):
-       try:
+        try:
 
-        print(
-            f"[EmailService] Connessione a {Config.SMTP_HOST}:{port}"
-        )
-
-        # Per Brevo usa SSL diretto sulla 465
-        server = smtplib.SMTP_SSL(
-            Config.SMTP_HOST,
-            int(port),
-            timeout=20
-        )
-
-        with server:
-
-            server.login(
-                Config.EMAIL_ADDRESS,
-                Config.EMAIL_PASSWORD
+            print(
+                f"[EmailService] Connessione a {Config.SMTP_HOST}:{port}"
             )
 
-            server.sendmail(
-                Config.EMAIL_ADDRESS,
-                recipient_email,
-                payload
+            server = smtplib.SMTP_SSL(
+                Config.SMTP_HOST,
+                int(port),
+                timeout=EmailService.SMTP_TIMEOUT_SECONDS
+            )
+
+            with server:
+
+                server.login(
+                    Config.EMAIL_ADDRESS,
+                    Config.EMAIL_PASSWORD
+                )
+
+                server.sendmail(
+                    Config.EMAIL_ADDRESS,
+                    recipient_email,
+                    payload
+                )
+
+                print(
+                    "[EmailService] Email inviata"
+                )
+
+            return True
+
+        except Exception as e:
+
+            EmailService.last_error = (
+                f"{Config.SMTP_HOST}:{port} - {str(e)}"
             )
 
             print(
-                "[EmailService] Email inviata"
+                f"[EmailService] {EmailService.last_error}"
             )
 
-        return True
-
-      except Exception as e:
-         
-        EmailService.last_error = (
-            f"{Config.SMTP_HOST}:{port} - {str(e)}"
-        )
-
-        print(
-            f"[EmailService] {EmailService.last_error}"
-        )
-
-        return False
-
+            return False
 
     @staticmethod
     def send_otp(
@@ -179,30 +141,26 @@ class EmailService:
         <html>
         <body>
 
-            <h2>Ciao {username}!</h2>
+        <h2>Ciao {username}!</h2>
 
-            <p>
-            Il tuo codice verifica per
-            <strong>DropBy</strong>
-            è:
-            </p>
+        <p>
+        Il tuo codice verifica per
+        <strong>DropBy</strong> è:
+        </p>
 
-            <h1 style="letter-spacing:8px;color:#7B1FA2;">
-                {otp_code}
-            </h1>
+        <h1 style="letter-spacing:8px;color:#7B1FA2;">
+        {otp_code}
+        </h1>
 
-            <p>
-            Il codice scade tra
-            <strong>10 minuti</strong>
-            </p>
+        <p>
+        Il codice scade tra
+        <strong>10 minuti</strong>
+        </p>
 
-            <p style="color:#999;font-size:12px;">
-
-                Se non hai richiesto
-                questa registrazione,
-                ignora questa email.
-
-            </p>
+        <p style="color:#999;font-size:12px;">
+        Se non hai richiesto questa registrazione,
+        ignora questa email.
+        </p>
 
         </body>
         </html>
