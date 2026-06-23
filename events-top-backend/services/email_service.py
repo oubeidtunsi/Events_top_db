@@ -111,105 +111,62 @@ class EmailService:
 
         return False
 
-    @staticmethod
-    def _smtp_ports():
+   @staticmethod
+   def _smtp_ports():
 
-        ports = [Config.SMTP_PORT]
+    # Usa esclusivamente la porta configurata
+    return [Config.SMTP_PORT]
 
-        # Fallback Gmail
-        if Config.SMTP_HOST == "smtp.gmail.com":
+   @staticmethod
+   def _send_with_port(
+    recipient_email,
+    payload,
+    port
+   ):
+       try:
 
-            for fallback_port in [587, 465]:
+        print(
+            f"[EmailService] Connessione a {Config.SMTP_HOST}:{port}"
+        )
 
-                if fallback_port not in ports:
+        # Per Brevo usa SSL diretto sulla 465
+        server = smtplib.SMTP_SSL(
+            Config.SMTP_HOST,
+            int(port),
+            timeout=20
+        )
 
-                    ports.append(
-                        fallback_port
-                    )
+        with server:
 
-        return ports
-
-    @staticmethod
-    def _send_with_port(
-        recipient_email,
-        payload,
-        port
-    ):
-
-        try:
-
-            print(
-                f"[EmailService] Connessione a {Config.SMTP_HOST}:{port}"
+            server.login(
+                Config.EMAIL_ADDRESS,
+                Config.EMAIL_PASSWORD
             )
 
-            # Porta SSL
-            if int(port) == 465:
-
-                server = smtplib.SMTP_SSL(
-                    Config.SMTP_HOST,
-                    port,
-                    timeout=EmailService.SMTP_TIMEOUT_SECONDS
-                )
-
-            # Porta TLS
-            else:
-
-                server = smtplib.SMTP(
-                    Config.SMTP_HOST,
-                    port,
-                    timeout=EmailService.SMTP_TIMEOUT_SECONDS
-                )
-
-            with server:
-
-                # Handshake SMTP
-                server.ehlo()
-
-                # TLS
-                if int(port) != 465:
-
-                    server.starttls()
-
-                    server.ehlo()
-
-                print(
-                    "[EmailService] Login SMTP..."
-                )
-
-                # Login
-                server.login(
-                    Config.EMAIL_ADDRESS,
-                    Config.EMAIL_PASSWORD
-                )
-
-                print(
-                    "[EmailService] Invio email..."
-                )
-
-                # Invio
-                server.sendmail(
-                    Config.EMAIL_ADDRESS,
-                    recipient_email,
-                    payload
-                )
-
-                print(
-                    "[EmailService] Email inviata"
-                )
-
-            return True
-
-        except Exception as e:
-
-            EmailService.last_error = (
-                f"{Config.SMTP_HOST}:{port} - {str(e)}"
+            server.sendmail(
+                Config.EMAIL_ADDRESS,
+                recipient_email,
+                payload
             )
 
             print(
-                f"[EmailService] {EmailService.last_error}"
+                "[EmailService] Email inviata"
             )
 
-            return False
+        return True
+
+      except Exception as e:
+         
+        EmailService.last_error = (
+            f"{Config.SMTP_HOST}:{port} - {str(e)}"
+        )
+
+        print(
+            f"[EmailService] {EmailService.last_error}"
+        )
+
+        return False
+
 
     @staticmethod
     def send_otp(
