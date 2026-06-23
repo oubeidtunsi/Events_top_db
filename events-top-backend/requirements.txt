@@ -6,3 +6,4 @@ PyJWT==2.7.0
 werkzeug
 pg8000==1.31.2
 gunicorn
+requests==2.32.3
