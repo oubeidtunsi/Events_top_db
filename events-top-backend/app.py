@@ -136,6 +136,30 @@ def submit_score():
 def health():
     return jsonify({"status": "healthy"})
 
+@app.route("/smtp-test")
+def smtp_test():
+
+    import socket
+
+    try:
+
+        socket.create_connection(
+            ("smtp-relay.brevo.com", 587),
+            timeout=10
+        )
+
+        return {
+            "status": "ok",
+            "message": "Connessione SMTP riuscita"
+        }
+
+    except Exception as e:
+
+        return {
+            "status": "errore",
+            "message": str(e)
+        }, 500
+
 @app.route('/api/auth/leaderboard', methods=['GET'])
 def get_leaderboard():
     try:
