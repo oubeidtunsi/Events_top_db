@@ -60,8 +60,8 @@ class EmailService:
 
         payload = {
             "sender": {
-                "name": "DropBy",
-                "email": Config.EMAIL_ADDRESS
+                "name": "DropBy Assistance",
+                "email": "events.top.assistance@gmail.com"
             },
             "to": [
                 {
